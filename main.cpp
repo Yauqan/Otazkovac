@@ -10,7 +10,7 @@
 #include <chrono>
 #include <algorithm>
 
-#define podilZakazanychOtazek 2
+#define podilZakazanychOtazek 1
 
 class otazky
 {
@@ -65,6 +65,19 @@ class otazky
           }
           break;
         }
+        #if podilZakazanychOtazek == 1
+        else if ( std::find ( cislaPoslednichOtazek.begin(), cislaPoslednichOtazek.end(), -1 ) == cislaPoslednichOtazek.end() )
+        {
+          std::wcout << "\n\t Dosly otazky, zacinam znovu:\n";
+          cislaPoslednichOtazek.clear();
+          int k;
+          for ( k = 0; k < N/podilZakazanychOtazek; k-=-1 )
+          {
+            cislaPoslednichOtazek.push_back(-1);
+          }
+          std::this_thread::sleep_for ( std::chrono::milliseconds (5000) );
+        }
+        #endif
       }
     }
 };
@@ -72,15 +85,12 @@ class otazky
 int main (void)
 {
   std::wifstream f;
-  f.open("pool.txt", std::wifstream::in);
-  otazky TEST;
-  TEST.nactiOtazky ( f );
-  f.close();
+  std::wstring address;
   
   long int casNaOtazku;
   
-  std::ifstream c;
-  c.open("conf.settings", std::ifstream::in);
+  std::wifstream c;
+  c.open("conf.settings", std::wifstream::in);
   if ( c.fail() == true )
   {
     std::wcout << "Error: nepodarilo se otevrit soubor conf.settings" << std::endl;
@@ -88,7 +98,18 @@ int main (void)
     return -1;
   }
   c >> casNaOtazku;
+  c >> address;
   casNaOtazku = casNaOtazku * 1000;
+  f.open(address.data(), std::wifstream::in);
+  if ( f.fail() == true )
+  {
+    std::wcout << "Error: nepodarilo se otevrit soubor na lokalni adrese " << address << '\n';
+    system("pause");
+    return -1;
+  }
+  otazky TEST;
+  TEST.nactiOtazky ( f );
+  f.close();
   
   srand(time(0));
   while ( true )
